@@ -18,3 +18,16 @@ export const sendMessage = async (req, res) => {
     res.status(500).json({ error: "Failed to send message" });
   }
 };
+
+export const getMessages = async (req, res) => {
+  try {
+    const messages = await Message.findAll({
+      order: [["createdAt", "ASC"]],
+    });
+
+    res.status(200).json(messages);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Failed to fetch messages" });
+  }
+};
