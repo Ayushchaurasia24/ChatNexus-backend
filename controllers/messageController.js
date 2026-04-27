@@ -11,6 +11,7 @@ export const sendMessage = async (req, res) => {
       message,
       UserId: userId,
     });
+    global.io.emit("newMessage", newMessage);
 
     res.status(201).json(newMessage);
   } catch (error) {
