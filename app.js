@@ -7,6 +7,7 @@ import authRoutes from "./routes/authRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import { Server } from "socket.io";
 import http from "http";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
@@ -35,10 +36,29 @@ const io = new Server(server, {
 global.io = io;
 
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  try {
+    const token = socket.handshake.auth.token;
+
+    if (!token) {
+      console.log("No token provided");
+      return socket.disconnect();
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Attach user to socket
+    socket.user = decoded;
+
+    console.log("User connected:", socket.user.id);
+
+  } catch (error) {
+    console.log("Authentication error:", error.message);
+    socket.disconnect();
+  }
 
   socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
+    console.log("User disconnected");
   });
 });
 

@@ -4,8 +4,7 @@ export const sendMessage = async (req, res) => {
   try {
     const { message } = req.body;
 
-    // ⚠️ TEMP: hardcoded userId (we'll fix later with auth)
-    const userId = 1;
+    const userId = req.user.id;
 
     const newMessage = await Message.create({
       message,
