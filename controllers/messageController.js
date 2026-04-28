@@ -9,6 +9,9 @@ export const sendMessage = async (req, res) => {
     const newMessage = await Message.create({
       message,
       UserId: userId,
+      roomId, // ✅ ADD THIS
+      type,
+      isGroup,
     });
 
     // ✅ Emit to room instead of global
@@ -30,13 +33,15 @@ export const sendMessage = async (req, res) => {
 
 export const getMessages = async (req, res) => {
   try {
+    const { roomId } = req.query;
+
     const messages = await Message.findAll({
+      where: { roomId },
       order: [["createdAt", "ASC"]],
     });
 
     res.status(200).json(messages);
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error: "Failed to fetch messages" });
   }
 };
