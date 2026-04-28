@@ -1,54 +1,40 @@
 import express from "express";
 import multer from "multer";
 import { authenticate } from "../middleware/auth.js";
-import path from "path";
+import s3 from "../config/s3.js";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 const router = express.Router();
 
-// ✅ Multer config (memory storage + limits)
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB max
-  },
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
-
-// ✅ Allowed types
-const allowedTypes = [
-  "image",
-  "video",
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-];
 
 router.post("/", authenticate, upload.single("file"), async (req, res) => {
   try {
     const file = req.file;
 
-    // ❗ 1. Check file exists
     if (!file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // ❗ 2. Validate type
-    const isValidType = allowedTypes.some((type) =>
-      file.mimetype.startsWith(type)
-    );
+    // ✅ use folder prefix (important)
+    const fileName = `chat/${Date.now()}-${file.originalname}`;
 
-    if (!isValidType) {
-      return res.status(400).json({ error: "Invalid file type" });
-    }
+    const command = new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: fileName,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+    });
 
-    // ❗ 3. Safe filename
-    const ext = path.extname(file.originalname);
-    const safeName = `${Date.now()}${ext}`;
+    await s3.send(command);
 
-    // ⚠️ TEMP URL (until AWS)
-    const fileUrl = `http://localhost:5000/uploads/${safeName}`;
+    // ✅ FIXED URL
+    const fileUrl = `https://${process.env.S3_BUCKET_NAME}.s3.ap-south-1.amazonaws.com/${fileName}`;
 
-    return res.json({ fileUrl });
-
+    res.json({ fileUrl });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Upload failed" });

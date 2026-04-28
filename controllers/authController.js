@@ -73,11 +73,10 @@ export const login = async (req, res) => {
     }
 
     // Generate token
-    const token = jwt.sign(
-      { id: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    const token = jwt.sign({
+      id: user.id,
+      email: user.email  
+    }, process.env.JWT_SECRET)
 
     res.json({
       message: "Login successful",
@@ -88,3 +87,23 @@ export const login = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getUserByEmail = async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    const user = await User.findOne({
+      where: { email },
+      attributes: ["id", "email", "name"],
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Server error" });
+  }
+}
