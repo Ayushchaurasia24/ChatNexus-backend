@@ -8,9 +8,11 @@ import "./models/index.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 
 // ✅ Socket init (modular)
 import initSocket from "./socket-io/index.js";
+
 
 dotenv.config();
 
@@ -23,6 +25,7 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // Health check
 app.get("/", (req, res) => {

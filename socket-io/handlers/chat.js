@@ -1,23 +1,35 @@
 const chatHandler = (socket) => {
   console.log("📩 Chat handler active for:", socket.user?.id);
 
-  // Example: join room
+  // ✅ JOIN ROOM
   socket.on("join_room", (roomId) => {
     socket.join(roomId);
     console.log(`User ${socket.user.id} joined room ${roomId}`);
   });
 
-  // Example: send message
+  // ✅ LEAVE ROOM
+  socket.on("leave_room", (roomId) => {
+    socket.leave(roomId);
+    console.log(`User ${socket.user.id} left room ${roomId}`);
+  });
+
+  // ✅ SEND MESSAGE (ROOM-BASED)
   socket.on("send_message", (data) => {
-    const { roomId, message } = data;
+    const { roomId, message, type = "text", isGroup } = data;
 
-    console.log(`Message from ${socket.user.id}:`, message);
-
-    // Broadcast to room
-    socket.to(roomId).emit("receive_message", {
-      userId: socket.user.id,
+    const payload = {
+      roomId,
       message,
-    });
+      UserId: socket.user.id,
+      createdAt: new Date(),
+      type,
+      isGroup,
+    };
+
+    console.log(`📤 Message from ${socket.user.id} → room ${roomId}`);
+
+    // ✅ send to others in room
+    socket.to(roomId).emit("receive_message", payload);
   });
 
   socket.on("disconnect", () => {

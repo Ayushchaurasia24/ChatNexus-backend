@@ -2,7 +2,7 @@ import { Message } from "../models/index.js";
 
 export const sendMessage = async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, roomId, type = "text", isGroup } = req.body;
 
     const userId = req.user.id;
 
@@ -10,7 +10,16 @@ export const sendMessage = async (req, res) => {
       message,
       UserId: userId,
     });
-    global.io.emit("newMessage", newMessage);
+
+    // ✅ Emit to room instead of global
+    global.io.to(roomId).emit("receive_message", {
+      roomId,
+      message: newMessage.message,
+      UserId: userId,
+      createdAt: newMessage.createdAt,
+      type,
+      isGroup,
+    });
 
     res.status(201).json(newMessage);
   } catch (error) {
