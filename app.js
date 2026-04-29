@@ -11,9 +11,9 @@ import messageRoutes from "./routes/messageRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import cron from "node-cron";
 import archiveOldMessages from "./utils/archiveMessages.js";
-
-// ✅ Socket init (modular)
+import aiRoutes from "./routes/aiRoutes.js";
 import initSocket from "./socket-io/index.js";
+
 
 dotenv.config();
 
@@ -27,6 +27,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Health check
 app.get("/", (req, res) => {
