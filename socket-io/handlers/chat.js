@@ -13,6 +13,18 @@ const chatHandler = (socket) => {
     console.log(`User ${socket.user.id} left room ${roomId}`);
   });
 
+  // 🔥 TYPING START
+  socket.on("typing", (roomId) => {
+    socket.to(roomId).emit("user_typing", {
+      userId: socket.user.id,
+    });
+  });
+
+  // 🔥 TYPING STOP
+  socket.on("stop_typing", (roomId) => {
+    socket.to(roomId).emit("user_stop_typing");
+  });
+
   socket.on("disconnect", () => {
     console.log("❌ User disconnected:", socket.user?.id);
   });

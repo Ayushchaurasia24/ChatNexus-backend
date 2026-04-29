@@ -56,7 +56,7 @@ server.listen(PORT, () => {
 });
 
 // 🕒 Run every day at midnight
-cron.schedule("*/1 * * * *", async () => {
+cron.schedule("0 0 * * *", async () => {
   console.log("⏰ Running daily archive job...");
   await archiveOldMessages();
 });
