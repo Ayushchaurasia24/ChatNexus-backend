@@ -1,77 +1,149 @@
-import { getAIResponse } from "../utils/openai.js";
-
 export const getSuggestions = async (req, res) => {
   try {
     const { text, lastMessage } = req.body;
 
-    // ✅ Safe inputs (avoid empty prompts)
-    const safeText = text || "Hi";
-    const safeLastMessage = lastMessage || "Hello";
+    const predictions = generatePredictions(text);
+    const replies = generateReplies(lastMessage);
 
-    // ✅ Strong prompt (forces structured output)
-    const prompt = `
-You are a smart chat assistant.
-
-STRICT RULES:
-- Return ONLY valid JSON
-- No explanation, no extra text
-- Always return exactly 3 predictions and 3 replies
-
-Format:
-{
-  "predictions": ["...", "...", "..."],
-  "replies": ["...", "...", "..."]
-}
-
-User typing: "${safeText}"
-Last message: "${safeLastMessage}"
-`;
-
-    const aiResponse = await getAIResponse(prompt);
-
-    console.log("RAW GEMINI RESPONSE:", aiResponse);
-
-    // ❌ If Gemini fails
-    if (!aiResponse) {
-      return res.json(getFallback());
-    }
-
-    // ✅ Extract JSON safely
-    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-
-    if (!jsonMatch) {
-      return res.json(getFallback());
-    }
-
-    let parsed;
-
-    try {
-      parsed = JSON.parse(jsonMatch[0]);
-    } catch (err) {
-      return res.json(getFallback());
-    }
-
-    // ✅ Validate structure
-    if (
-      !parsed.predictions ||
-      !parsed.replies ||
-      parsed.predictions.length === 0 ||
-      parsed.replies.length === 0
-    ) {
-      return res.json(getFallback());
-    }
-
-    return res.json(parsed);
+    res.json({ predictions, replies });
   } catch (error) {
-    console.log("AI ERROR:", error);
-    return res.status(500).json(getFallback());
+    console.log(error);
+    res.status(500).json({
+      predictions: [],
+      replies: [],
+    });
   }
 };
 
-// ✅ Fallback (VERY IMPORTANT for UX)
-const getFallback = () => {
-  return {
-    predictions: ["Okay", "Sounds good", "Let's do it"],
-    replies: ["Yes", "No", "Maybe later"],
-  };
+// 🧠 Helper: pick random items
+const pickRandom = (arr, count = 3) => {
+  return arr.sort(() => 0.5 - Math.random()).slice(0, count);
+};
+
+// 🔥 SMART PREDICTIONS (LIKE AI)
+const generatePredictions = (text) => {
+  if (!text) {
+    return pickRandom([
+      "Okay",
+      "Sounds good",
+      "Let’s do it",
+      "Sure",
+      "Alright then",
+    ]);
+  }
+
+  const lower = text.toLowerCase();
+
+  if (lower.includes("meet")) {
+    return pickRandom([
+      "5 pm",
+      "tomorrow evening",
+      "the office",
+      "this weekend",
+      "after lunch",
+    ]);
+  }
+
+  if (lower.includes("call")) {
+    return pickRandom([
+      "you later",
+      "in 10 minutes",
+      "tomorrow morning",
+      "after work",
+      "once I'm free",
+    ]);
+  }
+
+  if (lower.includes("let")) {
+    return pickRandom([
+      "me know",
+      "us plan something",
+      "us catch up",
+      "us finalize it",
+      "us discuss later",
+    ]);
+  }
+
+  if (lower.includes("where")) {
+    return pickRandom([
+      "are you now?",
+      "should we meet?",
+      "is the location?",
+      "exactly?",
+      "do you want to go?",
+    ]);
+  }
+
+  return pickRandom([
+    "Okay",
+    "Sounds good",
+    "Let’s do it",
+    "That works",
+    "Cool",
+    "Got it",
+  ]);
+};
+
+// 🔥 SMART REPLIES (CONTEXT AWARE)
+const generateReplies = (msg) => {
+  if (!msg) {
+    return pickRandom([
+      "Yes",
+      "No",
+      "Maybe later",
+      "Sounds good",
+      "Sure",
+    ]);
+  }
+
+  const lower = msg.toLowerCase();
+
+  if (lower.includes("meeting")) {
+    return pickRandom([
+      "Yes, I’ll be there",
+      "Running late, joining soon",
+      "Can we reschedule?",
+      "I’ll join in a bit",
+      "On my way",
+    ]);
+  }
+
+  if (lower.includes("where")) {
+    return pickRandom([
+      "At the office",
+      "On the way",
+      "Will share location",
+      "Near your place",
+      "Let me check",
+    ]);
+  }
+
+  if (lower.includes("coming")) {
+    return pickRandom([
+      "Yes, almost there",
+      "Running a bit late",
+      "On my way",
+      "Will be there soon",
+      "Give me 5 mins",
+    ]);
+  }
+
+  if (lower.includes("busy")) {
+    return pickRandom([
+      "A bit busy right now",
+      "Will text you later",
+      "Let’s talk later",
+      "Give me some time",
+      "Currently tied up",
+    ]);
+  }
+
+  return pickRandom([
+    "Yes",
+    "No",
+    "Sounds good",
+    "Alright",
+    "Okay",
+    "Let’s do it",
+  ]);
 };
