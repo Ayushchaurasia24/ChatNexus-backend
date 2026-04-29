@@ -12,7 +12,7 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 
 // ✅ Socket init (modular)
 import initSocket from "./socket-io/index.js";
-
+import archiveOldMessages from "./utils/archiveMessages.js";
 
 dotenv.config();
 
@@ -52,3 +52,7 @@ sequelize.sync()
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+setTimeout(() => {
+  archiveOldMessages();
+}, 5000);
