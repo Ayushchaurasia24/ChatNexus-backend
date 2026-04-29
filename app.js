@@ -9,10 +9,11 @@ import "./models/index.js";
 import authRoutes from "./routes/authRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import cron from "node-cron";
+import archiveOldMessages from "./utils/archiveMessages.js";
 
 // ✅ Socket init (modular)
 import initSocket from "./socket-io/index.js";
-import archiveOldMessages from "./utils/archiveMessages.js";
 
 dotenv.config();
 
@@ -51,4 +52,10 @@ sequelize.sync()
 // Start server
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+// 🕒 Run every day at midnight
+cron.schedule("*/1 * * * *", async () => {
+  console.log("⏰ Running daily archive job...");
+  await archiveOldMessages();
 });
