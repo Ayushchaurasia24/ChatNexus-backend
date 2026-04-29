@@ -52,7 +52,3 @@ sequelize.sync()
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-setTimeout(() => {
-  archiveOldMessages();
-}, 5000);

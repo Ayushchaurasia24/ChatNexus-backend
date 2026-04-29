@@ -6,7 +6,7 @@ const archiveOldMessages = async () => {
     console.log("🧹 Archiving old messages...");
 
     // 1️⃣ Find messages older than 1 day
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const oneDayAgo = new Date(Date.now() - 2 * 60 * 1000);
 
     const oldMessages = await Message.findAll({
       where: {
