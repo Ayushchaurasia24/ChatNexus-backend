@@ -5,13 +5,13 @@ const archiveOldMessages = async () => {
   try {
     console.log("🧹 Archiving old messages...");
 
-    // 1️⃣ Find messages older than 1 day
-    const oneDayAgo = new Date(Date.now() - 1 * 60 * 1000);
+    // Find messages older than 30 days
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
     const oldMessages = await Message.findAll({
       where: {
         createdAt: {
-          [Op.lt]: oneDayAgo,
+          [Op.lt]: thirtyDaysAgo,
         },
       },
     });
@@ -21,7 +21,7 @@ const archiveOldMessages = async () => {
       return;
     }
 
-    // 2️⃣ Move to ArchivedMessages
+    // Move to ArchivedMessages
     const archivedData = oldMessages.map((msg) => ({
       message: msg.message,
       roomId: msg.roomId,
@@ -34,18 +34,18 @@ const archiveOldMessages = async () => {
 
     await ArchivedMessage.bulkCreate(archivedData);
 
-    // 3️⃣ Delete from Messages
+    // Delete from Messages
     await Message.destroy({
       where: {
         createdAt: {
-          [Op.lt]: oneDayAgo,
+          [Op.lt]: thirtyDaysAgo,
         },
       },
     });
 
     console.log(`✅ Archived ${oldMessages.length} messages`);
   } catch (error) {
-    console.log("❌ Archive error:", error);
+    console.error("[archiveMessages]", error.message);
   }
 };
 

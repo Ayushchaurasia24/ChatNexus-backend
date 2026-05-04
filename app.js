@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import http from "http";
+import rateLimit from "express-rate-limit";
 
 import sequelize from "./config/db.js";
 import "./models/index.js";
@@ -14,17 +15,29 @@ import archiveOldMessages from "./utils/archiveMessages.js";
 import aiRoutes from "./routes/aiRoutes.js";
 import initSocket from "./socket-io/index.js";
 
-
 dotenv.config();
 
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:3000",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+}));
 app.use(express.json());
 
+// Rate limiting — max 20 auth requests per 15 min per IP
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { message: "Too many requests. Please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Routes
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/ai", aiRoutes);
@@ -45,10 +58,10 @@ const io = initSocket(server);
 // Optional: make globally accessible
 global.io = io;
 
-// DB sync
-sequelize.sync()
-  .then(() => console.log("Tables created ✅"))
-  .catch(err => console.log(err));
+// DB sync — never use force:true in production (drops tables)
+sequelize.sync({ force: false })
+  .then(() => console.log("DB synced ✅"))
+  .catch((err) => console.error("[DB sync error]", err.message));
 
 // Start server
 server.listen(PORT, () => {

@@ -19,11 +19,14 @@ router.post("/", authenticate, upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // ✅ use folder prefix (important)
-    const fileName = `chat/${Date.now()}-${file.originalname}`;
+    // Sanitize filename — strip any path separators or dangerous chars
+    const safeName = file.originalname
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .replace(/\.{2,}/g, "_");
+    const fileName = `chat/${Date.now()}-${safeName}`;
 
     const command = new PutObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME,
+      Bucket: process.env.AWS_BUCKET_NAME,
       Key: fileName,
       Body: file.buffer,
       ContentType: file.mimetype,
@@ -32,11 +35,11 @@ router.post("/", authenticate, upload.single("file"), async (req, res) => {
     await s3.send(command);
 
     // ✅ FIXED URL
-    const fileUrl = `https://${process.env.S3_BUCKET_NAME}.s3.ap-south-1.amazonaws.com/${fileName}`;
+    const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION || "ap-south-1"}.amazonaws.com/${fileName}`;
 
     res.json({ fileUrl });
   } catch (error) {
-    console.log(error);
+    console.error("[upload]", error.message);
     res.status(500).json({ error: "Upload failed" });
   }
 });

@@ -2,16 +2,13 @@ export const getSuggestions = async (req, res) => {
   try {
     const { text, lastMessage } = req.body;
 
-    const predictions = generatePredictions(text);
-    const replies = generateReplies(lastMessage);
+    const predictions = generatePredictions(text || "");
+    const replies = generateReplies(lastMessage || "");
 
     res.json({ predictions, replies });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      predictions: [],
-      replies: [],
-    });
+    console.error("[getSuggestions]", error.message);
+    res.status(500).json({ predictions: [], replies: [] });
   }
 };
 

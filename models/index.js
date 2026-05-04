@@ -1,4 +1,4 @@
-import User from "./user.js";
+import User from "./User.js";
 import Message from "./message.js";
 import ArchivedMessage from "./archivedMessage.js";
 

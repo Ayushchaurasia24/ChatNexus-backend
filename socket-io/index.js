@@ -5,8 +5,9 @@ import chatHandler from "./handlers/chat.js";
 const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: "*",
+      origin: process.env.CLIENT_URL || "http://localhost:3000",
       methods: ["GET", "POST"],
+      credentials: true,
     },
   });
 
@@ -14,12 +15,10 @@ const initSocket = (server) => {
   io.use(socketAuthMiddleware);
 
   io.on("connection", (socket) => {
-    console.log("⚡ User connected:", socket.user?.id);
-
     chatHandler(socket);
   });
 
   return io;
 };
 
-export default initSocket; // ✅ CRITICAL
+export default initSocket;
